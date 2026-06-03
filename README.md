@@ -1,20 +1,20 @@
 # JOGAM SAMv2 — Serveur de Supervision
 
-Flask server for real-time supervision of industrial machines via IP cameras. Detects the state of luminous columns (signal towers) using YOLO and ArUco markers, logs machine events, and exposes a full REST API with a web dashboard.
+Serveur Flask de supervision en temps réel de machines industrielles via caméras IP. Détecte l'état des colonnes lumineuses (tours de signalisation) par YOLO et marqueurs ArUco, enregistre les événements machine et expose une API REST complète avec tableau de bord web.
 
 ---
 
-## Features
+## Fonctionnalités
 
-- **Real-time camera streaming** — MJPEG streams from multiple RTSP/IP cameras
-- **YOLO + ArUco detection** — detects signal tower colors (red / orange / green / off) and maps them to machines via ArUco markers
-- **Machine supervision** — tracks state changes, logs events, triggers alerts
-- **Dashboard** — live overview of all machines and their current states
-- **Alert system** — configurable alerts per machine
-- **Reports** — export events, states, and alerts as CSV or PDF
-- **Statistics** — charts per machine, per event type, over time
-- **Camera control** — PTZ, IR, LED, snapshot via API
-- **User management** — role-based access (technicien / superviseur)
+- **Streaming caméra en temps réel** — flux MJPEG depuis plusieurs caméras RTSP/IP
+- **Détection YOLO + ArUco** — détecte les couleurs des colonnes lumineuses (rouge / orange / vert / éteint) et les associe aux machines via marqueurs ArUco
+- **Supervision machine** — suivi des changements d'état, journalisation des événements, déclenchement d'alertes
+- **Tableau de bord** — vue d'ensemble en direct de toutes les machines et leur état courant
+- **Système d'alertes** — alertes configurables par machine
+- **Rapports** — export des événements, états et alertes en CSV ou PDF
+- **Statistiques** — graphiques par machine, par type d'événement, dans le temps
+- **Contrôle caméra** — PTZ, IR, LED, snapshot via API
+- **Gestion des utilisateurs** — accès par rôle (technicien / superviseur)
 
 ---
 
@@ -24,37 +24,37 @@ Flask server for real-time supervision of industrial machines via IP cameras. De
 main.py
 └── Application
     ├── Flask app + MySQL (flask-mysqldb)
-    ├── CameraManager        — RTSP thread pool, one thread per camera
-    ├── DetecteurCouleur     — producer/consumer YOLO pipeline
-    │   ├── _DetectionThread (per camera) — captures frames → queue
-    │   └── _YoloWorker (singleton)       — YOLO inference + ArUco
-    ├── controleur/          — Flask route handlers (MVC controllers)
-    └── modele/              — Database models and business logic
+    ├── CameraManager        — pool de threads RTSP, un thread par caméra
+    ├── DetecteurCouleur     — pipeline YOLO producteur/consommateur
+    │   ├── _DetectionThread (par caméra) — capture les frames → queue
+    │   └── _YoloWorker (singleton)       — inférence YOLO + ArUco
+    ├── controleur/          — gestionnaires de routes Flask (contrôleurs MVC)
+    └── modele/              — modèles base de données et logique métier
 ```
 
-The YOLO worker is a single thread that processes frames from all cameras sequentially, avoiding PyTorch multi-threading crashes. Camera threads act as producers; the worker is the sole consumer.
+Le worker YOLO est un thread unique qui traite les frames de toutes les caméras séquentiellement, évitant les crashs PyTorch multi-thread. Les threads caméra sont des producteurs ; le worker est le seul consommateur.
 
 ---
 
-## Stack
+## Stack technique
 
-| Layer | Technology |
+| Couche | Technologie |
 |---|---|
-| Web framework | Flask |
-| Database | MySQL (flask-mysqldb) |
-| Computer vision | OpenCV, Ultralytics YOLO, ArUco |
+| Framework web | Flask |
+| Base de données | MySQL (flask-mysqldb) |
+| Vision par ordinateur | OpenCV, Ultralytics YOLO, ArUco |
 | Streaming | MJPEG over HTTP |
-| Frontend | Jinja2 templates, vanilla JS |
+| Frontend | Templates Jinja2, JS vanilla |
 
 ---
 
-## Getting Started
+## Démarrage rapide
 
-### Prerequisites
+### Prérequis
 
 - Python 3.10+
-- MySQL server with a `samv2` database
-- IP cameras accessible via RTSP
+- Serveur MySQL avec une base de données `samv2`
+- Caméras IP accessibles via RTSP
 
 ### Installation
 
@@ -66,110 +66,110 @@ pip install flask flask-mysqldb python-dotenv opencv-python ultralytics requests
 
 ### Configuration
 
-Copy `.env.example` to `.env` and fill in your values:
+Copiez `.env.example` vers `.env` et renseignez vos valeurs :
 
 ```env
 DB_HOST=localhost
 DB_USER=technicien
-DB_PASSWORD=yourpassword
+DB_PASSWORD=votremotdepasse
 DB_NAME=samv2
 DB_PORT=3306
 
 DEFAULT_RTSP_USER=admin
-DEFAULT_RTSP_PASS=yourpassword
+DEFAULT_RTSP_PASS=votremotdepasse
 
-SECRET_KEY=change-this-secret-key
+SECRET_KEY=changer-cette-cle-secrete
 API_BASE_URL=http://127.0.0.1:5000
 FLASK_DEBUG=False
 ```
 
-### Database
+### Base de données
 
-Run the SQL update script to create the default users:
+Exécutez le script SQL pour créer les utilisateurs par défaut :
 
 ```bash
 mysql samv2 < update_bdd.sql
 ```
 
-Default credentials after setup:
+Identifiants par défaut après initialisation :
 
-| Login | Password | Role |
+| Login | Mot de passe | Rôle |
 |---|---|---|
 | technicien | tech2026 | technicien |
 | superviseur | super2026 | superviseur |
 
-### Run
+### Lancement
 
 ```bash
 python main.py
 ```
 
-The server starts on `0.0.0.0:5000` and prints the local and network URLs.
+Le serveur démarre sur `0.0.0.0:5000` et affiche les URLs locale et réseau.
 
 ---
 
-## API Reference
+## Référence API
 
-### Cameras
-| Method | Endpoint | Description |
+### Caméras
+| Méthode | Endpoint | Description |
 |---|---|---|
-| GET | `/api/cameras` | List cameras |
-| POST | `/api/cameras` | Add camera |
-| PUT | `/api/cameras/<id>` | Update camera |
-| DELETE | `/api/cameras/<id>` | Delete camera |
-| GET | `/video_feed/<id>` | MJPEG stream |
+| GET | `/api/cameras` | Lister les caméras |
+| POST | `/api/cameras` | Ajouter une caméra |
+| PUT | `/api/cameras/<id>` | Modifier une caméra |
+| DELETE | `/api/cameras/<id>` | Supprimer une caméra |
+| GET | `/video_feed/<id>` | Flux MJPEG |
 | GET | `/api/cameras/<id>/snap` | Snapshot |
-| POST | `/api/cameras/<id>/ptz` | PTZ control |
+| POST | `/api/cameras/<id>/ptz` | Contrôle PTZ |
 | POST/GET | `/api/cameras/<id>/ir` | IR on/off |
 | POST/GET | `/api/cameras/<id>/led` | LED on/off |
 
 ### Machines
-| Method | Endpoint | Description |
+| Méthode | Endpoint | Description |
 |---|---|---|
-| GET | `/api/machines` | List machines |
-| POST | `/api/machines` | Add machine |
-| PUT | `/api/machines/<id>` | Update machine |
-| DELETE | `/api/machines/<id>` | Delete machine |
-| GET | `/api/etat/<id>` | Current machine state |
-| GET | `/api/historique/<id>` | Event history |
+| GET | `/api/machines` | Lister les machines |
+| POST | `/api/machines` | Ajouter une machine |
+| PUT | `/api/machines/<id>` | Modifier une machine |
+| DELETE | `/api/machines/<id>` | Supprimer une machine |
+| GET | `/api/etat/<id>` | État courant de la machine |
+| GET | `/api/historique/<id>` | Historique des événements |
 
-### Events & Alerts
-| Method | Endpoint | Description |
+### Événements & Alertes
+| Méthode | Endpoint | Description |
 |---|---|---|
-| POST | `/api/evenements` | Insert event (used by detector) |
-| GET | `/api/alertes` | List alerts |
-| POST | `/api/alertes/ajouter` | Add alert |
-| DELETE | `/api/alertes/<id>` | Delete alert |
+| POST | `/api/evenements` | Insérer un événement (utilisé par le détecteur) |
+| GET | `/api/alertes` | Lister les alertes |
+| POST | `/api/alertes/ajouter` | Ajouter une alerte |
+| DELETE | `/api/alertes/<id>` | Supprimer une alerte |
 
-### Stats
-| Method | Endpoint | Description |
+### Statistiques
+| Méthode | Endpoint | Description |
 |---|---|---|
-| GET | `/api/stats/dashboard` | Dashboard summary |
-| GET | `/api/stats/etats` | State breakdown |
-| GET | `/api/stats/evenements` | Event timeline |
-| GET | `/api/stats/machines` | Per-machine stats |
+| GET | `/api/stats/dashboard` | Résumé tableau de bord |
+| GET | `/api/stats/etats` | Répartition des états |
+| GET | `/api/stats/evenements` | Chronologie des événements |
+| GET | `/api/stats/machines` | Statistiques par machine |
 
-### Reports
-| Method | Endpoint | Description |
+### Rapports
+| Méthode | Endpoint | Description |
 |---|---|---|
-| GET | `/rapports/csv/complet` | Full CSV export |
-| GET | `/rapports/csv/evenements` | Events CSV |
-| GET | `/rapports/csv/etats` | States CSV |
-| GET | `/rapports/csv/alertes` | Alerts CSV |
-| GET | `/rapports/pdf` | PDF report |
+| GET | `/rapports/csv/complet` | Export CSV complet |
+| GET | `/rapports/csv/evenements` | CSV événements |
+| GET | `/rapports/csv/etats` | CSV états |
+| GET | `/rapports/csv/alertes` | CSV alertes |
+| GET | `/rapports/pdf` | Rapport PDF |
 
 ---
 
-## Project Structure
+## Structure du projet
 
 ```
 flask_sam/
-├── main.py                  # Entry point
-├── application.py           # App factory + routing
-├── config.py                # Config from .env
-├── logger.py                # Logging setup
-├── update_bdd.sql           # DB seed (default users)
-├── controleur/              # Route handlers
+├── main.py                  # Point d'entrée
+├── application.py           # Fabrique d'application + routage
+├── config.py                # Configuration depuis .env
+├── logger.py                # Configuration des logs
+├── update_bdd.sql           # Initialisation BDD (utilisateurs par défaut)
+├── controleur/              # Gestionnaires de routes
 │   ├── controleur_auth.py
 │   ├── controleur_camera.py
 │   ├── controleur_camera_ctrl.py
@@ -180,7 +180,7 @@ flask_sam/
 │   ├── controleur_report.py
 │   ├── controleur_erreurs.py
 │   └── validators.py
-├── modele/                  # DB models + detection
+├── modele/                  # Modèles BDD + détection
 │   ├── supervision_base.py
 │   ├── supervision_camera.py
 │   ├── supervision_machine.py
@@ -191,8 +191,8 @@ flask_sam/
 │   ├── supervision_stats.py
 │   ├── supervision_rapport.py
 │   ├── camera_manager.py
-│   ├── detecteur_couleur.py # YOLO + ArUco pipeline
-│   └── colonne_lumineuse.pt # YOLO model (trained)
-├── templates/               # Jinja2 HTML templates
+│   ├── detecteur_couleur.py # Pipeline YOLO + ArUco
+│   └── colonne_lumineuse.pt # Modèle YOLO (entraîné)
+├── templates/               # Templates HTML Jinja2
 └── static/                  # CSS
 ```
